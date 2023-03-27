@@ -1,1 +1,56 @@
 
+def handle_hit(team_id, ring_id):
+    global led_states, team_scores, TEAM_COLORS
+    team_scores[team_id] += 1
+    led_states[ring_id][team_id] = False
+    for i in range(LED_COUNT):
+        if any(led_states[i]):
+            strip.setPixelColor(i, Color(*TEAM_COLORS[led_states[i].index(True)]))
+        else:
+            strip.setPixelColor(i, Color(0, 0, 0))
+    strip.show()
+    time.sleep(1)
+    next_team = (team_id + 1) % len(TEAM_COLORS)
+    if team_scores[next_team] > 0:
+        for i in range(LED_COUNT):
+            if any(led_states[i]) and led_states[i][next_team]:
+                led_states[i][next_team] = False
+                strip.setPixelColor(i, Color(0, 0, 0))
+        strip.show()
+        time.sleep(1)
+    else:
+        end_game()
+
+def end_game():
+    global led_states, team_scores, TEAM_COLORS
+    winner = team_scores.index(max(team_scores))
+    color = TEAM_COLORS[winner]
+    for i in range(LED_COUNT):
+        strip.setPixelColor(i, Color(*color))
+    strip.show()
+    time.sleep(5)
+    led_states = [[True for _ in range(len(TEAM_COLORS))] for _ in range(LED_COUNT)]
+    team_scores = [0 for _ in range(len(TEAM_COLORS))]
+    for i in range(LED_COUNT):
+        strip.setPixelColor(i, Color(0, 0, 0))
+    strip.show()
+
+def change_mode(mode):
+    global game_mode
+    game_mode = mode
+
+def change_team_colors(colors):
+    global TEAM_COLORS
+    TEAM_COLORS = colors
+    for i in range(LED_COUNT):
+        if any(led_states[i]):
+            strip.setPixelColor(i, Color(*TEAM_COLORS[led_states[i].index(True)]))
+        else:
+            strip.setPixelColor(i, Color(0, 0, 0))
+    strip.show()
+
+
+#Hauptprogramm
+if __name__ == '__main__':
+    initialize_game()
+    app.run(debug=True, host='0.0.0.0')
